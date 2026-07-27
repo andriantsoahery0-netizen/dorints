@@ -5,8 +5,11 @@
                 Gestion des Utilisateurs
             </h2>
             <a href="{{ route('users.create') }}"
-               class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-sm">
-                + Nouvel utilisateur
+               class="flex items-center gap-1.5 bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                Nouvel utilisateur
             </a>
         </div>
     </x-slot>
@@ -15,44 +18,44 @@
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
 
             @if (session('success'))
-                <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
+                <div class="mb-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm">
                     {{ session('success') }}
                 </div>
             @endif
 
             @if (session('error'))
-                <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+                <div class="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm">
                     {{ session('error') }}
                 </div>
             @endif
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-100">
                 <div class="p-6">
 
-                    <table class="min-w-full divide-y divide-gray-200">
+                    <table class="min-w-full divide-y divide-gray-100">
                         <thead>
                             <tr>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Rôle</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
-                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nom</th>
+                                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Rôle</th>
+                                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
+                                <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
+                        <tbody class="divide-y divide-gray-50">
                             @foreach ($users as $user)
-                                <tr>
+                                <tr class="hover:bg-gray-50/70 transition">
                                     <td class="px-4 py-3">
                                         <a href="{{ route('users.show', $user) }}" class="text-indigo-700 hover:underline font-medium">
                                             {{ $user->name }}
                                         </a>
                                     </td>
-                                    <td class="px-4 py-3">{{ $user->email }}</td>
+                                    <td class="px-4 py-3 text-gray-600">{{ $user->email }}</td>
                                     <td class="px-4 py-3">
                                         <span @class([
                                             'px-2 py-1 rounded-full text-xs font-medium',
                                             'bg-purple-100 text-purple-800' => $user->role === 'admin',
-                                            'bg-gray-100 text-gray-800' => $user->role === 'agent',
+                                            'bg-gray-100 text-gray-700' => $user->role === 'agent',
                                         ])>
                                             {{ $user->role }}
                                         </span>
