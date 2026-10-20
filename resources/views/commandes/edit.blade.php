@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-semibold text-xl text-indigo-900 leading-tight">
             Modifier la commande {{ $commande->numero_commande }}
         </h2>
     </x-slot>
