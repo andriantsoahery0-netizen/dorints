@@ -10,6 +10,7 @@ class DashboardController extends Controller
     {
         $stats = [
             'commandes_en_attente' => Commande::where('statut', 'en_attente')->count(),
+            'commandes_validees' => Commande::where('statut', 'validee')->count(),
             'commandes_en_cours' => Commande::where('statut', 'en_cours')->count(),
             'commandes_livrees' => Commande::where('statut', 'livree')->count(),
         ];

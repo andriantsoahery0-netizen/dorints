@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-indigo-900 leading-tight">
-            Nouveau transfert — Commande {{ $commande->numero_commande }}
+            Règlement de la facture {{ $commande->facture->numero_facture }} — Commande {{ $commande->numero_commande }}
         </h2>
     </x-slot>
 
@@ -17,9 +17,14 @@
             </div>
 
             <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-100 p-6">
-                <p class="text-sm text-gray-500 mb-4">
-                    Client : <strong class="text-gray-800">{{ $commande->client->nom }} {{ $commande->client->prenom }}</strong>
-                </p>
+                <div class="grid grid-cols-3 gap-4 mb-5 pb-4 border-b border-gray-100 text-sm">
+                    <div><p class="text-gray-500">Client</p>
+                         <p class="font-semibold text-gray-800">{{ $commande->client->nom }} {{ $commande->client->prenom }}</p></div>
+                    <div><p class="text-gray-500">Montant de la facture</p>
+                         <p class="font-semibold text-gray-800">{{ number_format($commande->facture->montant, 0, ',', ' ') }} Ar</p></div>
+                    <div><p class="text-gray-500">Reste à payer</p>
+                         <p class="font-semibold text-red-700">{{ number_format($commande->resteAPayer(), 0, ',', ' ') }} Ar</p></div>
+                </div>
 
                 <form action="{{ route('transferts.store', $commande) }}" method="POST" class="space-y-4">
                     @csrf
@@ -28,8 +33,8 @@
                         <label for="sens" class="block text-sm font-medium text-gray-700">Sens de la conversion</label>
                         <select name="sens" id="sens"
                                 class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600">
-                            <option value="eur_vers_mga" @selected(old('sens') === 'eur_vers_mga')>Euro → Ariary (EUR vers MGA)</option>
                             <option value="mga_vers_eur" @selected(old('sens') === 'mga_vers_eur')>Ariary → Euro (MGA vers EUR)</option>
+                            <option value="eur_vers_mga" @selected(old('sens') === 'eur_vers_mga')>Euro → Ariary (EUR vers MGA)</option>
                         </select>
                         @error('sens')
                             <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -39,8 +44,8 @@
                     <div>
                         <label for="montant_envoye" class="block text-sm font-medium text-gray-700">Montant envoyé</label>
                         <input type="text" inputmode="decimal" name="montant_envoye" id="montant_envoye"
-                               value="{{ old('montant_envoye') }}"
-                               placeholder="ex: 100"
+                               value="{{ old('montant_envoye', (int) $commande->resteAPayer()) }}"
+                               placeholder="ex: 850000"
                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600">
                         @error('montant_envoye')
                             <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -63,7 +68,7 @@
                     </div>
 
                     <p class="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
-                        Le montant converti sera calculé automatiquement avec le taux actuel.
+                        Un règlement en ariary est déduit du reste à payer de la facture. Le montant converti est calculé automatiquement avec le taux actuel.
                     </p>
 
                     <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
@@ -73,7 +78,7 @@
                         </a>
                         <button type="submit"
                                 class="bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-sm">
-                            Enregistrer le transfert
+                            Enregistrer le règlement
                         </button>
                     </div>
                 </form>

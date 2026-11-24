@@ -25,7 +25,7 @@
             </div>
 
             {{-- Stats commandes --}}
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <a href="{{ route('commandes.index', ['statut' => 'en_attente']) }}"
                    class="bg-white hover:shadow-md shadow-sm rounded-xl p-6 border border-gray-100 transition group">
                     <div class="flex items-center justify-between">
@@ -34,6 +34,16 @@
                     </div>
                     <p class="text-3xl font-bold text-gray-800 mt-2 group-hover:text-indigo-700 transition">
                         {{ $stats['commandes_en_attente'] }}
+                    </p>
+                </a>
+                <a href="{{ route('commandes.index', ['statut' => 'validee']) }}"
+                   class="bg-white hover:shadow-md shadow-sm rounded-xl p-6 border border-gray-100 transition group">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm font-medium text-gray-500">Commandes validées</p>
+                        <span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+                    </div>
+                    <p class="text-3xl font-bold text-gray-800 mt-2 group-hover:text-indigo-700 transition">
+                        {{ $stats['commandes_validees'] }}
                     </p>
                 </a>
                 <a href="{{ route('commandes.index', ['statut' => 'en_cours']) }}"

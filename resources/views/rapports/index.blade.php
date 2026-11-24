@@ -9,7 +9,7 @@
         <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
             {{-- Cartes de statistiques commandes --}}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div class="bg-white shadow-sm rounded-xl border border-gray-100 p-6">
                     <p class="text-sm text-gray-500">Total commandes</p>
                     <p class="text-3xl font-bold text-gray-800 mt-1">{{ $stats['total_commandes'] }}</p>
@@ -17,6 +17,10 @@
                 <div class="bg-yellow-50 shadow-sm rounded-xl border border-yellow-100 p-6">
                     <p class="text-sm text-yellow-700">En attente</p>
                     <p class="text-3xl font-bold text-yellow-800 mt-1">{{ $stats['commandes_en_attente'] }}</p>
+                </div>
+                <div class="bg-purple-50 shadow-sm rounded-xl border border-purple-100 p-6">
+                    <p class="text-sm text-purple-700">Validées</p>
+                    <p class="text-3xl font-bold text-purple-800 mt-1">{{ $stats['commandes_validees'] }}</p>
                 </div>
                 <div class="bg-blue-50 shadow-sm rounded-xl border border-blue-100 p-6">
                     <p class="text-sm text-blue-700">En cours</p>
@@ -59,6 +63,56 @@
                     </div>
                 </div>
             @endif
+
+            {{-- Totaux par mois --}}
+            <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-100 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Totaux par mois</h3>
+                    <form method="GET" action="{{ route('rapports.index') }}">
+                        <select name="annee" onchange="this.form.submit()"
+                                class="rounded-lg border-gray-300 shadow-sm text-sm focus:border-indigo-600 focus:ring-indigo-600">
+                            @foreach ($annees as $a)
+                                <option value="{{ $a }}" @selected($a == $annee)>{{ $a }}</option>
+                            @endforeach
+                        </select>
+                    </form>
+                </div>
+                @php
+                    $totalAnnee = [
+                        'commandes' => array_sum(array_column($totauxParMois, 'commandes')),
+                        'facture' => array_sum(array_column($totauxParMois, 'facture')),
+                        'regle' => array_sum(array_column($totauxParMois, 'regle')),
+                    ];
+                @endphp
+                <table class="min-w-full divide-y divide-gray-100">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Mois</th>
+                            <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Commandes</th>
+                            <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Montant facturé</th>
+                            <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Montant réglé</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                        @foreach ($totauxParMois as $ligne)
+                            <tr @class(['text-gray-400' => $ligne['commandes'] == 0 && $ligne['facture'] == 0 && $ligne['regle'] == 0, 'text-gray-800' => ! ($ligne['commandes'] == 0 && $ligne['facture'] == 0 && $ligne['regle'] == 0)])>
+                                <td class="px-4 py-2">{{ $ligne['mois'] }}</td>
+                                <td class="px-4 py-2 text-right">{{ $ligne['commandes'] }}</td>
+                                <td class="px-4 py-2 text-right whitespace-nowrap">{{ number_format($ligne['facture'], 0, ',', ' ') }} Ar</td>
+                                <td class="px-4 py-2 text-right whitespace-nowrap">{{ number_format($ligne['regle'], 0, ',', ' ') }} Ar</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot>
+                        <tr class="border-t-2 border-gray-200 font-semibold text-gray-900">
+                            <td class="px-4 py-3">Total {{ $annee }}</td>
+                            <td class="px-4 py-3 text-right">{{ $totalAnnee['commandes'] }}</td>
+                            <td class="px-4 py-3 text-right whitespace-nowrap">{{ number_format($totalAnnee['facture'], 0, ',', ' ') }} Ar</td>
+                            <td class="px-4 py-3 text-right whitespace-nowrap">{{ number_format($totalAnnee['regle'], 0, ',', ' ') }} Ar</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
 
             {{-- Dernières transactions --}}
             <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-100 p-6">

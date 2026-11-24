@@ -10,6 +10,7 @@ use App\Http\Controllers\RapportController;
 use App\Http\Controllers\ActivityLogController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FactureController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -35,6 +36,10 @@ Route::middleware('auth')->group(function () {
 
     // Module Commandes
     Route::resource('commandes', CommandeController::class);
+    Route::post('/commandes/{commande}/valider', [CommandeController::class, 'valider'])->name('commandes.valider');
+
+    // Factures
+    Route::get('/factures/{facture}', [FactureController::class, 'show'])->name('factures.show');
 
     // Module Transferts 
     Route::get('/commandes/{commande}/transferts/create', [TransfertController::class, 'create'])->name('transferts.create');

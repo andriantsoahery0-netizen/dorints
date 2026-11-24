@@ -23,7 +23,26 @@
                 </div>
             @endif
 
+            @php
+                $onglets = ['' => 'Tous', 'regle' => 'Ont tout réglé', 'non_regle' => 'Pas encore réglé'];
+            @endphp
+            <div class="mb-4 flex flex-wrap gap-2">
+                @foreach ($onglets as $cle => $libelle)
+                    <a href="{{ route('clients.index', array_filter(['situation' => $cle, 'recherche' => request('recherche')])) }}"
+                       @class([
+                           'px-3 py-1.5 rounded-lg text-sm font-medium transition',
+                           'bg-indigo-800 text-white' => request('situation', '') === $cle,
+                           'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' => request('situation', '') !== $cle,
+                       ])>
+                        {{ $libelle }}
+                    </a>
+                @endforeach
+            </div>
+
             <form action="{{ route('clients.index') }}" method="GET" class="mb-4 flex gap-2">
+                @if (request('situation'))
+                    <input type="hidden" name="situation" value="{{ request('situation') }}">
+                @endif
                 <div class="relative flex-1">
                     <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -52,7 +71,7 @@
                             <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 100-8 4 4 0 000 8zm6 3c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
                             </svg>
-                            <p class="text-gray-500">Aucun client enregistré pour le moment.</p>
+                            <p class="text-gray-500">Aucun client trouvé.</p>
                         </div>
                     @else
                         <table class="min-w-full divide-y divide-gray-100">
@@ -61,8 +80,9 @@
                                     <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nom</th>
                                     <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Prénom</th>
                                     <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Téléphone</th>
-                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
-                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Adresse</th>
+                                    <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Facturé</th>
+                                    <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Reste à régler</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Situation</th>
                                     <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
@@ -71,10 +91,21 @@
                                     <tr class="hover:bg-gray-50/70 transition">
                                         <td class="px-4 py-3 font-medium text-gray-800">{{ $client->nom }}</td>
                                         <td class="px-4 py-3 text-gray-600">{{ $client->prenom }}</td>
-                                        <td class="px-4 py-3 text-gray-600">{{ $client->telephone }}</td>
-                                        <td class="px-4 py-3 text-gray-600">{{ $client->email ?? '—' }}</td>
-                                        <td class="px-4 py-3 text-gray-600">{{ $client->adresse }}</td>
-                                        <td class="px-4 py-3 text-right space-x-3">
+                                        <td class="px-4 py-3 text-gray-600 whitespace-nowrap">{{ $client->telephone }}</td>
+                                        <td class="px-4 py-3 text-right text-gray-800 whitespace-nowrap">{{ number_format($client->totalFacture(), 0, ',', ' ') }} Ar</td>
+                                        <td class="px-4 py-3 text-right font-medium whitespace-nowrap {{ $client->resteARegler() > 0 ? 'text-red-700' : 'text-gray-800' }}">{{ number_format($client->resteARegler(), 0, ',', ' ') }} Ar</td>
+                                        <td class="px-4 py-3">
+                                            @php $sit = $client->situation(); @endphp
+                                            <span @class([
+                                                'px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap',
+                                                'bg-green-100 text-green-800' => $sit === 'regle',
+                                                'bg-red-100 text-red-800' => $sit === 'non_regle',
+                                                'bg-gray-100 text-gray-600' => $sit === 'aucune_facture',
+                                            ])>
+                                                {{ ['regle' => 'A tout réglé', 'non_regle' => 'Pas encore réglé', 'aucune_facture' => 'Aucune facture'][$sit] }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-right space-x-3 whitespace-nowrap">
                                             <a href="{{ route('clients.show', $client) }}"
                                                class="text-indigo-700 hover:text-indigo-900 font-medium text-sm">Voir</a>
                                             <a href="{{ route('clients.edit', $client) }}"

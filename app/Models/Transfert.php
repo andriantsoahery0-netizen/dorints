@@ -22,6 +22,15 @@ class Transfert extends Model
         'user_id',
     ];
 
+    // Libellés des modes de paiement
+    public const MODES = [
+        'especes' => 'Espèces',
+        'mvola' => 'MVola',
+        'orange_money' => 'Orange Money',
+        'airtel_money' => 'Airtel Money',
+        'virement' => 'Virement bancaire',
+    ];
+
     public function commande(): BelongsTo
     {
         return $this->belongsTo(Commande::class);

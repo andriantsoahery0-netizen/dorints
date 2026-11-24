@@ -17,6 +17,12 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
+            @if (session('error'))
+                <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm">
+                    {{ session('error') }}
+                </div>
+            @endif
+
             @if (session('success'))
                 <div class="mb-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm">
                     {{ session('success') }}
@@ -62,6 +68,14 @@
                    ])>
                     En attente
                 </a>
+                <a href="{{ route('commandes.index', ['statut' => 'validee']) }}"
+                   @class([
+                       'px-3 py-1.5 rounded-lg text-sm font-medium transition',
+                       'bg-purple-500 text-white' => request('statut') === 'validee',
+                       'bg-purple-50 text-purple-800 border border-purple-200 hover:bg-purple-100' => request('statut') !== 'validee',
+                   ])>
+                    Validées
+                </a>
                 <a href="{{ route('commandes.index', ['statut' => 'en_cours']) }}"
                    @class([
                        'px-3 py-1.5 rounded-lg text-sm font-medium transition',
@@ -96,6 +110,7 @@
                                 <tr>
                                     <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">N° commande</th>
                                     <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Client</th>
+                                    <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Montant</th>
                                     <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
                                     <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
                                     <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
@@ -106,10 +121,12 @@
                                     <tr class="hover:bg-gray-50/70 transition">
                                         <td class="px-4 py-3 font-medium text-gray-800">{{ $commande->numero_commande }}</td>
                                         <td class="px-4 py-3 text-gray-600">{{ $commande->client->nom }} {{ $commande->client->prenom }}</td>
+                                        <td class="px-4 py-3 text-right text-gray-800 whitespace-nowrap">{{ number_format($commande->montant_total, 0, ',', ' ') }} Ar</td>
                                         <td class="px-4 py-3">
                                             <span @class([
                                                 'px-2 py-1 rounded-full text-xs font-medium',
                                                 'bg-yellow-100 text-yellow-800' => $commande->statut === 'en_attente',
+                                                'bg-purple-100 text-purple-800' => $commande->statut === 'validee',
                                                 'bg-blue-100 text-blue-800' => $commande->statut === 'en_cours',
                                                 'bg-green-100 text-green-800' => $commande->statut === 'livree',
                                             ])>

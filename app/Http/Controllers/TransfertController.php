@@ -13,6 +13,10 @@ class TransfertController extends Controller
     // Formulaire de création, pour une commande donnée
     public function create(Commande $commande)
     {
+        if ($refus = $this->verifierFacture($commande)) {
+            return $refus;
+        }
+
         $tauxActuel = TauxChange::actuel();
 
         if (!$tauxActuel) {
@@ -26,11 +30,23 @@ class TransfertController extends Controller
     // Enregistrement du transfert
     public function store(Request $request, Commande $commande)
     {
+        if ($refus = $this->verifierFacture($commande)) {
+            return $refus;
+        }
+
         $validated = $request->validate([
             'montant_envoye' => 'required|numeric|min:0.01',
             'sens' => 'required|in:mga_vers_eur,eur_vers_mga',
             'mode_paiement' => 'required|in:especes,mvola,orange_money,airtel_money,virement',
         ]);
+
+        // Un règlement en ariary ne peut pas dépasser le reste à payer de la facture
+        $reste = $commande->resteAPayer();
+        if ($validated['sens'] === 'mga_vers_eur' && $validated['montant_envoye'] > $reste) {
+            return back()->withInput()->withErrors([
+                'montant_envoye' => 'Le montant dépasse le reste à payer de la facture (' . number_format($reste, 0, ',', ' ') . ' Ar).',
+            ]);
+        }
 
         $tauxActuel = TauxChange::actuel();
 
@@ -68,7 +84,23 @@ class TransfertController extends Controller
             "Transfert de {$validated['montant_envoye']} {$deviseSource} enregistré pour la commande {$commande->numero_commande}"
         );
 
-return redirect()->route('commandes.show', $commande)
-    ->with('success', 'Transfert enregistré avec succès.');
+        return redirect()->route('commandes.show', $commande)
+            ->with('success', 'Règlement enregistré avec succès.');
+    }
+
+    // Le client règle sa facture : pas de règlement avant la validation de la commande
+    private function verifierFacture(Commande $commande)
+    {
+        if (! $commande->facture()->exists()) {
+            return redirect()->route('commandes.show', $commande)
+                ->with('error', 'Validez d\'abord la commande : le règlement se fait sur la facture.');
+        }
+
+        if ($commande->resteAPayer() <= 0) {
+            return redirect()->route('commandes.show', $commande)
+                ->with('error', 'La facture de cette commande est déjà entièrement réglée.');
+        }
+
+        return null;
     }
 }

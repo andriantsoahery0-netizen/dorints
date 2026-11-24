@@ -7,10 +7,17 @@ use Illuminate\Http\Request;
 
 class ClientController extends Controller
 {
-    // Liste de tous les clients
+    // Liste des clients, avec leur situation de paiement
     public function index(Request $request)
     {
-        $query = Client::latest();
+        $query = Client::avecSituation()->latest();
+
+        // Filtre : clients qui ont tout réglé / qui n'ont pas encore réglé
+        if ($request->input('situation') === 'regle') {
+            $query->ayantRegle();
+        } elseif ($request->input('situation') === 'non_regle') {
+            $query->nonRegle();
+        }
 
         if ($request->filled('recherche')) {
             $recherche = $request->recherche;
@@ -53,7 +60,7 @@ class ClientController extends Controller
     // Détail d'un client (avec son historique)
     public function show(Client $client)
     {
-        $client->load(['commandes', 'transferts']);
+        $client->load(['commandes.facture', 'transferts']);
         return view('clients.show', compact('client'));
     }
 
