@@ -47,6 +47,21 @@
                         @enderror
                     </div>
 
+                    <div>
+                        <label for="mode_paiement" class="block text-sm font-medium text-gray-700">Mode de paiement du client</label>
+                        <select name="mode_paiement" id="mode_paiement"
+                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600">
+                            <option value="especes" @selected(old('mode_paiement') === 'especes')>Espèces</option>
+                            <option value="mvola" @selected(old('mode_paiement') === 'mvola')>MVola</option>
+                            <option value="orange_money" @selected(old('mode_paiement') === 'orange_money')>Orange Money</option>
+                            <option value="airtel_money" @selected(old('mode_paiement') === 'airtel_money')>Airtel Money</option>
+                            <option value="virement" @selected(old('mode_paiement') === 'virement')>Virement bancaire</option>
+                        </select>
+                        @error('mode_paiement')
+                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <p class="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
                         Le montant converti sera calculé automatiquement avec le taux actuel.
                     </p>

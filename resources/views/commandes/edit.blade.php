@@ -38,6 +38,16 @@
                     </div>
 
                     <div>
+                        <label for="montant_total" class="block text-sm font-medium text-gray-700">Montant total (Ar)</label>
+                        <input type="number" step="0.01" min="0" name="montant_total" id="montant_total"
+                               value="{{ old('montant_total', $commande->montant_total) }}"
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600">
+                        @error('montant_total')
+                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
                         <label for="statut" class="block text-sm font-medium text-gray-700">Statut</label>
                         <select name="statut" id="statut"
                                 class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600">

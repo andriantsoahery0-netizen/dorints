@@ -18,6 +18,7 @@ class Transfert extends Model
         'devise_cible',
         'taux_applique',
         'montant_converti',
+        'mode_paiement',
         'user_id',
     ];
 

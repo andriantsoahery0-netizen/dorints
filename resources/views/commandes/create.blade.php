@@ -42,6 +42,16 @@
                             @enderror
                         </div>
 
+                                                <div>
+                            <label for="montant_total" class="block text-sm font-medium text-gray-700">Montant total (Ar)</label>
+                            <input type="number" step="0.01" min="0" name="montant_total" id="montant_total"
+                                   value="{{ old('montant_total') }}" placeholder="ex: 850000"
+                                   class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600">
+                            @error('montant_total')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <p class="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
                             Le numéro de commande et le statut ("en attente") seront générés automatiquement.
                         </p>

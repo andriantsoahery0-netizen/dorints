@@ -39,12 +39,14 @@ class CommandeController extends Controller
         $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
             'description' => 'required|string',
+            'montant_total' => 'required|numeric|min:0',
         ]);
 
         $commande = Commande::create([
             'numero_commande' => $this->genererNumeroCommande(),
             'client_id' => $validated['client_id'],
             'description' => $validated['description'],
+            'montant_total' => $validated['montant_total'],
             'statut' => 'en_attente',
             'user_id' => auth()->id(),
         ]);
@@ -79,6 +81,7 @@ return redirect()->route('commandes.index')
             'client_id' => 'required|exists:clients,id',
             'description' => 'required|string',
             'statut' => 'required|in:en_attente,en_cours,livree',
+            'montant_total' => 'required|numeric|min:0',
         ]);
 
     $ancienStatut = $commande->statut;

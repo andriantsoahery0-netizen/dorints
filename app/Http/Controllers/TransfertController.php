@@ -29,6 +29,7 @@ class TransfertController extends Controller
         $validated = $request->validate([
             'montant_envoye' => 'required|numeric|min:0.01',
             'sens' => 'required|in:mga_vers_eur,eur_vers_mga',
+            'mode_paiement' => 'required|in:especes,mvola,orange_money,airtel_money,virement',
         ]);
 
         $tauxActuel = TauxChange::actuel();
@@ -58,6 +59,7 @@ class TransfertController extends Controller
             'devise_cible' => $deviseCible,
             'taux_applique' => $tauxApplique,
             'montant_converti' => $montantConverti,
+            'mode_paiement' => $validated['mode_paiement'],
             'user_id' => auth()->id(),
         ]);
 

@@ -63,6 +63,26 @@
                 </dl>
             </div>
 
+            {{-- Suivi du paiement --}}
+            @php $sp = $commande->statutPaiement(); @endphp
+            <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-100 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Paiement du client</h3>
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold
+                        {{ $sp === 'paye' ? 'bg-green-100 text-green-800' : ($sp === 'partiel' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800') }}">
+                        {{ ['paye' => 'Payé', 'partiel' => 'Paiement partiel', 'non_paye' => 'Non payé'][$sp] }}
+                    </span>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div><p class="text-sm text-gray-500">Montant total</p>
+                         <p class="text-lg font-semibold text-gray-800">{{ number_format($commande->montant_total, 0, ',', ' ') }} Ar</p></div>
+                    <div><p class="text-sm text-gray-500">Payé</p>
+                         <p class="text-lg font-semibold text-gray-800">{{ number_format($commande->montantPaye(), 0, ',', ' ') }} Ar</p></div>
+                    <div><p class="text-sm text-gray-500">Reste à payer</p>
+                         <p class="text-lg font-semibold text-gray-800">{{ number_format($commande->resteAPayer(), 0, ',', ' ') }} Ar</p></div>
+                </div>
+            </div>
+
             {{-- Transferts liés --}}
             <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-100 p-6">
                 <div class="flex justify-between items-center mb-4">
