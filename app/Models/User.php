@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -14,6 +15,8 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
+        'nom',
+        'prenom',
         'email',
         'password',
         'role',
@@ -33,6 +36,28 @@ class User extends Authenticatable
         'actif' => 'boolean',
     ];
 }
+
+    // Le nom complet (colonne name) est toujours « NOM Prénom »
+    protected static function booted(): void
+    {
+        static::saving(function (User $user) {
+            // Compte créé avec un seul champ « name » (ex. « Jean Rakoto ») : on le découpe
+            if (blank($user->nom) && filled($user->name)) {
+                $mots = preg_split('/\s+/', trim($user->name), -1, PREG_SPLIT_NO_EMPTY);
+                $user->nom = array_pop($mots);
+                $user->prenom = implode(' ', $mots);
+            }
+            if (filled($user->nom)) {
+                $user->name = trim($user->nom . ' ' . $user->prenom);
+            }
+        });
+    }
+
+    // Le nom est toujours enregistré (et donc affiché) en majuscules
+    protected function nom(): Attribute
+    {
+        return Attribute::make(set: fn ($valeur) => $valeur === null ? null : mb_strtoupper(trim($valeur), 'UTF-8'));
+    }
 
     public function isAdmin(): bool
     {

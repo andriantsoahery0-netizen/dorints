@@ -1,7 +1,6 @@
 <?php
 
-it('returns a successful response', function () {
-    $response = $this->get('/');
-
-    $response->assertStatus(200);
+// La page d'accueil renvoie vers la connexion
+it('redirige l\'accueil vers la page de connexion', function () {
+    $this->get('/')->assertRedirect(route('login'));
 });

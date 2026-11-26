@@ -6,6 +6,7 @@ use App\Models\Commande;
 use App\Models\Facture;
 use App\Models\Transfert;
 use Illuminate\Http\Request;
+use App\Support\Csv;
 
 class RapportController extends Controller
 {
@@ -13,10 +14,15 @@ class RapportController extends Controller
 {
     $tauxActuel = \App\Models\TauxChange::actuel();
 
-    $montantTotalMga = Transfert::where('devise_source', 'MGA')->sum('montant_envoye');
-    $montantTotalEur = Transfert::where('devise_source', 'EUR')->sum('montant_envoye');
+    // Transferts des 3 derniers mois (mois en cours compris)
+    $debutPeriode = now()->startOfMonth()->subMonths(2);
+    $periode = $debutPeriode->translatedFormat('F') . ' – ' . now()->translatedFormat('F Y');
+    $transfertsPeriode = fn () => Transfert::where('created_at', '>=', $debutPeriode);
 
-    // Total combiné, converti dans les deux devises
+    $montantTotalMga = $transfertsPeriode()->where('devise_source', 'MGA')->sum('montant_envoye');
+    $montantTotalEur = $transfertsPeriode()->where('devise_source', 'EUR')->sum('montant_envoye');
+
+    // Total général de la même période, converti dans les deux devises au taux actuel
     if ($tauxActuel) {
         $totalGeneralEur = $montantTotalEur + ($montantTotalMga * $tauxActuel->taux_mga_vers_eur);
         $totalGeneralMga = $montantTotalMga + ($montantTotalEur * $tauxActuel->taux_eur_vers_mga);
@@ -31,11 +37,12 @@ class RapportController extends Controller
             'commandes_validees' => Commande::where('statut', 'validee')->count(),
         'commandes_en_cours' => Commande::where('statut', 'en_cours')->count(),
         'commandes_livrees' => Commande::where('statut', 'livree')->count(),
-        'total_transferts' => Transfert::count(),
+        'total_transferts' => $transfertsPeriode()->count(),
         'montant_total_mga' => $montantTotalMga,
         'montant_total_eur' => $montantTotalEur,
         'total_general_eur' => $totalGeneralEur,
         'total_general_mga' => $totalGeneralMga,
+        'periode' => $periode,
     ];
 
     $dernieresTransactions = Transfert::with(['client', 'commande'])
@@ -50,6 +57,19 @@ class RapportController extends Controller
     $totauxParMois = $this->totauxParMois($annee);
 
     return view('rapports.index', compact('stats', 'dernieresTransactions', 'annees', 'annee', 'totauxParMois'));
+}
+
+// Export Excel des totaux par mois de l'année choisie
+public function export(Request $request)
+{
+    $annee = (int) $request->input('annee', now()->year);
+    $mois = $this->totauxParMois($annee);
+
+    $lignes = array_map(fn ($m) => [$m['mois'], $m['commandes'], Csv::nombre($m['facture']), Csv::nombre($m['regle'])], $mois);
+    $lignes[] = ["Total {$annee}", array_sum(array_column($mois, 'commandes')),
+        Csv::nombre(array_sum(array_column($mois, 'facture'))), Csv::nombre(array_sum(array_column($mois, 'regle')))];
+
+    return Csv::telecharger("totaux-par-mois-{$annee}.csv", ['Mois', 'Commandes', 'Montant facturé (Ar)', 'Montant réglé (Ar)'], $lignes);
 }
 
 // Pour chaque mois de l'année : nombre de commandes, montant facturé, montant réglé

@@ -1,233 +1,93 @@
-<nav x-data="{ open: false }" class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border-b border-indigo-900/50 shadow-lg">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
-                <!-- Logo -->
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" class="flex items-center gap-2">
-                        <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 shadow-sm">
-                            <svg class="w-5 h-5 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 4v12m0 0l4-4m-4 4l-4-4" />
-                            </svg>
-                        </div>
-                        <div class="leading-tight hidden sm:block">
-                            <span class="block text-lg font-extrabold tracking-tight text-white">
-                                D'ORINTS
-                            </span>
-                            <span class="block text-[10px] font-medium uppercase tracking-wider text-indigo-300">
-                                Gestion &amp; Transfert
-                            </span>
-                        </div>
-                    </a>
-                </div>
+{{-- Menu latéral : fixe sur ordinateur, tiroir sur téléphone (variable « menu » de app.blade.php) --}}
+@php
+    // Compteurs affichés dans le menu : ce qui attend une action
+    $aValider = \App\Models\Commande::where('statut', 'en_attente')->count();
+    $nonReglees = \App\Models\Facture::nonReglees()->count();
 
-                <!-- Navigation Links -->
-                <div class="hidden space-x-1 sm:ms-10 sm:flex sm:items-center">
-                    <a href="{{ route('dashboard') }}"
-                       @class([
-                           'flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition',
-                           'bg-amber-400/10 text-amber-300 ring-1 ring-amber-400/30' => request()->routeIs('dashboard'),
-                           'text-indigo-200 hover:bg-white/5 hover:text-white' => !request()->routeIs('dashboard'),
-                       ])>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                        </svg>
-                        Dashboard
-                    </a>
-                    <a href="{{ route('clients.index') }}"
-                       @class([
-                           'flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition',
-                           'bg-amber-400/10 text-amber-300 ring-1 ring-amber-400/30' => request()->routeIs('clients.*'),
-                           'text-indigo-200 hover:bg-white/5 hover:text-white' => !request()->routeIs('clients.*'),
-                       ])>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 100-8 4 4 0 000 8zm6 3c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-                        </svg>
-                        Clients
-                    </a>
-                    <a href="{{ route('commandes.index') }}"
-                       @class([
-                           'flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition',
-                           'bg-amber-400/10 text-amber-300 ring-1 ring-amber-400/30' => request()->routeIs('commandes.*'),
-                           'text-indigo-200 hover:bg-white/5 hover:text-white' => !request()->routeIs('commandes.*'),
-                       ])>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                        </svg>
-                        Commandes
-                    </a>
-                    <a href="{{ route('taux-changes.index') }}"
-                       @class([
-                           'flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition',
-                           'bg-amber-400/10 text-amber-300 ring-1 ring-amber-400/30' => request()->routeIs('taux-changes.*'),
-                           'text-indigo-200 hover:bg-white/5 hover:text-white' => !request()->routeIs('taux-changes.*'),
-                       ])>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4" />
-                        </svg>
-                        Taux de change
-                    </a>
+    $liens = [
+        ['route' => 'dashboard', 'actif' => 'dashboard', 'libelle' => 'Tableau de bord',
+         'icone' => 'M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z'],
+        ['route' => 'clients.index', 'actif' => 'clients.*', 'libelle' => 'Clients',
+         'icone' => 'M9 11a4 4 0 100-8 4 4 0 000 8zM2 21c0-4 3-6 7-6s7 2 7 6M17 11a3 3 0 100-6M22 21c0-3-2-5-5-5.5'],
+        ['route' => 'commandes.index', 'actif' => 'commandes.*', 'libelle' => 'Commandes', 'compteur' => $aValider,
+         'icone' => 'M6 2h12v20l-6-3-6 3z'],
+        ['route' => 'factures.index', 'actif' => 'factures.*', 'libelle' => 'Factures', 'compteur' => $nonReglees,
+         'icone' => 'M4 3h16v18H4zM8 8h8M8 12h8M8 16h5'],
+        ['route' => 'taux-changes.index', 'actif' => 'taux-changes.*', 'libelle' => 'Taux de change',
+         'icone' => 'M7 7h13l-4-4M17 17H4l4 4'],
+    ];
+    $liensAdmin = [
+        ['route' => 'rapports.index', 'actif' => 'rapports.*', 'libelle' => 'Rapports',
+         'icone' => 'M3 17l6-6 4 4 8-8M15 7h6v6'],
+        ['route' => 'users.index', 'actif' => 'users.*', 'libelle' => 'Utilisateurs',
+         'icone' => 'M12 11a4 4 0 100-8 4 4 0 000 8zM5 21a7 7 0 0114 0'],
+        ['route' => 'activity-logs.index', 'actif' => 'activity-logs.*', 'libelle' => 'Journal',
+         'icone' => 'M12 8v4l3 2M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
+        ['route' => 'sauvegarde.index', 'actif' => 'sauvegarde.*', 'libelle' => 'Sauvegarde',
+         'icone' => 'M12 4v12m0 0l-4-4m4 4l4-4M4 20h16'],
+    ];
+@endphp
 
-                    @if (auth()->user()->isAdmin())
-                        <div class="w-px h-6 bg-indigo-800 mx-2"></div>
+{{-- Fond sombre derrière le menu ouvert sur téléphone --}}
+<div x-show="menu" x-transition.opacity @click="menu = false" class="fixed inset-0 z-40 bg-slate-900/50 lg:hidden" style="display: none"></div>
 
-                        <a href="{{ route('users.index') }}"
-                           @class([
-                               'flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition',
-                               'bg-amber-400/10 text-amber-300 ring-1 ring-amber-400/30' => request()->routeIs('users.*'),
-                               'text-indigo-200 hover:bg-white/5 hover:text-white' => !request()->routeIs('users.*'),
-                           ])>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            Utilisateurs
-                        </a>
-                        <a href="{{ route('rapports.index') }}"
-                           @class([
-                               'flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition',
-                               'bg-amber-400/10 text-amber-300 ring-1 ring-amber-400/30' => request()->routeIs('rapports.*'),
-                               'text-indigo-200 hover:bg-white/5 hover:text-white' => !request()->routeIs('rapports.*'),
-                           ])>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                            </svg>
-                            Rapports
-                        </a>
-                        <a href="{{ route('activity-logs.index') }}"
-                           @class([
-                               'flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition',
-                               'bg-amber-400/10 text-amber-300 ring-1 ring-amber-400/30' => request()->routeIs('activity-logs.*'),
-                               'text-indigo-200 hover:bg-white/5 hover:text-white' => !request()->routeIs('activity-logs.*'),
-                           ])>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Journal
-                        </a>
-                    @endif
-                </div>
-            </div>
+<aside :class="menu ? 'translate-x-0' : '-translate-x-full'"
+       class="fixed inset-y-0 left-0 z-50 w-64 -translate-x-full transform bg-[#c4e3f7] text-slate-900 border-r border-[#a6d0ee] transition-transform duration-200 lg:static lg:min-h-screen lg:w-60 lg:shrink-0 lg:translate-x-0">
+  <div class="flex h-full flex-col lg:sticky lg:top-0 lg:h-screen">
 
-            <div class="hidden sm:flex sm:items-center sm:gap-2">
-                <!-- Notifications -->
-                <x-dropdown align="right" width="80">
-                    <x-slot name="trigger">
-                        <button class="relative inline-flex items-center p-2 text-indigo-200 hover:text-white rounded-lg hover:bg-white/5 transition focus:outline-none">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
-                            @php $nonLues = auth()->user()->unreadNotifications->count(); @endphp
-                            @if ($nonLues > 0)
-                                <span class="absolute top-1 right-1 inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold leading-none text-slate-900 bg-amber-400 rounded-full">
-                                    {{ $nonLues }}
-                                </span>
-                            @endif
-                        </button>
-                    </x-slot>
-                    <x-slot name="content">
-                        <div class="max-h-96 overflow-y-auto">
-                            @forelse (auth()->user()->notifications->take(10) as $notification)
-                                <div class="px-4 py-3 text-sm border-b border-gray-100 {{ $notification->read_at ? 'bg-white' : 'bg-amber-50' }}">
-                                    <p class="text-gray-700">{{ $notification->data['message'] }}</p>
-                                    <p class="text-xs text-gray-400 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
-                                </div>
-                            @empty
-                                <div class="px-4 py-3 text-sm text-gray-500">Aucune notification.</div>
-                            @endforelse
-                        </div>
-                        @if ($nonLues > 0)
-                            <form method="POST" action="{{ route('notifications.markAllRead') }}" class="border-t border-gray-100">
-                                @csrf
-                                <button type="submit" class="w-full text-center px-4 py-2 text-sm text-indigo-600 hover:bg-gray-50">
-                                    Tout marquer comme lu
-                                </button>
-                            </form>
-                        @endif
-                    </x-slot>
-                </x-dropdown>
+    <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-5 py-5">
+        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 shadow-sm">
+            <svg class="h-5 w-5 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 4v12m0 0l4-4m-4 4l-4-4" /></svg>
+        </span>
+        <span class="leading-tight">
+            <span class="block font-display text-lg font-bold text-slate-900">D'ORINTS</span>
+            <span class="block text-[11px] uppercase tracking-wider text-blue-800">Gestion &amp; transfert</span>
+        </span>
+    </a>
 
-                <!-- Settings Dropdown -->
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-indigo-200 hover:text-white hover:bg-white/5 transition focus:outline-none">
-                            <span class="flex items-center justify-center w-7 h-7 rounded-full bg-indigo-700 text-white text-xs font-bold">
-                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                            </span>
-                            <span class="hidden lg:inline">{{ Auth::user()->name }}</span>
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                    </x-slot>
-
-                    <x-slot name="content">
-                        <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
-
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <x-dropdown-link :href="route('logout')"
-                                    onclick="event.preventDefault();
-                                                this.closest('form').submit();">
-                                {{ __('Log Out') }}
-                            </x-dropdown-link>
-                        </form>
-                    </x-slot>
-                </x-dropdown>
-            </div>
-
-            <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-indigo-200 hover:text-white hover:bg-white/5 focus:outline-none transition">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+    <nav class="flex-1 overflow-y-auto px-3 pb-6" aria-label="Menu principal">
+        <p class="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-blue-700">Activité</p>
+        <div class="space-y-1">
+            @foreach ($liens as $lien)
+                <a href="{{ route($lien['route']) }}"
+                   @class([
+                       'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition',
+                       'bg-white text-blue-800 shadow-sm' => request()->routeIs($lien['actif']),
+                       'hover:bg-white/60 hover:text-slate-900' => ! request()->routeIs($lien['actif']),
+                   ])>
+                    <svg class="h-5 w-5 {{ request()->routeIs($lien['actif']) ? 'text-blue-800' : 'text-blue-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="{{ $lien['icone'] }}" />
                     </svg>
-                </button>
-            </div>
+                    <span class="flex-1">{{ $lien['libelle'] }}</span>
+                    @if (! empty($lien['compteur']))
+                        <span class="rounded-full bg-blue-800 px-2 py-0.5 text-xs font-semibold text-white" title="{{ $lien['route'] === 'commandes.index' ? 'Commandes à valider' : 'Factures non réglées' }}">{{ $lien['compteur'] }}</span>
+                    @endif
+                </a>
+            @endforeach
         </div>
+
+        @if (auth()->user()->isAdmin())
+            <p class="mt-6 mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-blue-700">Administration</p>
+            <div class="space-y-1">
+                @foreach ($liensAdmin as $lien)
+                    <a href="{{ route($lien['route']) }}"
+                       @class([
+                           'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition',
+                           'bg-white text-blue-800 shadow-sm' => request()->routeIs($lien['actif']),
+                           'hover:bg-white/60 hover:text-slate-900' => ! request()->routeIs($lien['actif']),
+                       ])>
+                        <svg class="h-5 w-5 {{ request()->routeIs($lien['actif']) ? 'text-blue-800' : 'text-blue-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="{{ $lien['icone'] }}" />
+                        </svg>
+                        {{ $lien['libelle'] }}
+                    </a>
+                @endforeach
+            </div>
+        @endif
+    </nav>
+
+    <div class="border-t border-[#a6d0ee] px-5 py-4 text-xs text-blue-900">
+        Connecté en tant que <span class="font-semibold text-slate-800">{{ auth()->user()->isAdmin() ? 'administrateur' : 'agent' }}</span>
     </div>
-
-    <!-- Responsive Navigation Menu -->
-    <div x-cloak :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden bg-slate-900/95 border-t border-indigo-900/50">
-        <div class="pt-2 pb-3 space-y-1 px-2">
-            <a href="{{ route('dashboard') }}" @class(['block px-3 py-2 rounded-lg text-sm font-medium', 'bg-amber-400/10 text-amber-300' => request()->routeIs('dashboard'), 'text-indigo-200' => !request()->routeIs('dashboard')])>Dashboard</a>
-            <a href="{{ route('clients.index') }}" @class(['block px-3 py-2 rounded-lg text-sm font-medium', 'bg-amber-400/10 text-amber-300' => request()->routeIs('clients.*'), 'text-indigo-200' => !request()->routeIs('clients.*')])>Clients</a>
-            <a href="{{ route('commandes.index') }}" @class(['block px-3 py-2 rounded-lg text-sm font-medium', 'bg-amber-400/10 text-amber-300' => request()->routeIs('commandes.*'), 'text-indigo-200' => !request()->routeIs('commandes.*')])>Commandes</a>
-            <a href="{{ route('taux-changes.index') }}" @class(['block px-3 py-2 rounded-lg text-sm font-medium', 'bg-amber-400/10 text-amber-300' => request()->routeIs('taux-changes.*'), 'text-indigo-200' => !request()->routeIs('taux-changes.*')])>Taux de change</a>
-            @if (auth()->user()->isAdmin())
-                <a href="{{ route('users.index') }}" @class(['block px-3 py-2 rounded-lg text-sm font-medium', 'bg-amber-400/10 text-amber-300' => request()->routeIs('users.*'), 'text-indigo-200' => !request()->routeIs('users.*')])>Utilisateurs</a>
-                <a href="{{ route('rapports.index') }}" @class(['block px-3 py-2 rounded-lg text-sm font-medium', 'bg-amber-400/10 text-amber-300' => request()->routeIs('rapports.*'), 'text-indigo-200' => !request()->routeIs('rapports.*')])>Rapports</a>
-                <a href="{{ route('activity-logs.index') }}" @class(['block px-3 py-2 rounded-lg text-sm font-medium', 'bg-amber-400/10 text-amber-300' => request()->routeIs('activity-logs.*'), 'text-indigo-200' => !request()->routeIs('activity-logs.*')])>Journal</a>
-            @endif
-        </div>
-
-        <div class="pt-4 pb-3 border-t border-indigo-900/50">
-            <div class="px-4 flex items-center gap-3">
-                <span class="flex items-center justify-center w-9 h-9 rounded-full bg-indigo-700 text-white text-sm font-bold">
-                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                </span>
-                <div>
-                    <div class="font-medium text-sm text-white">{{ Auth::user()->name }}</div>
-                    <div class="text-xs text-indigo-300">{{ Auth::user()->email }}</div>
-                </div>
-            </div>
-
-            <div class="mt-3 space-y-1 px-2">
-                <x-responsive-nav-link :href="route('profile.edit')" class="text-indigo-200">
-                    {{ __('Profile') }}
-                </x-responsive-nav-link>
-
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();">
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
-                </form>
-            </div>
-        </div>
-    </div>
-</nav>
+  </div>
+</aside>

@@ -28,7 +28,13 @@ class StatutCommandeChange extends Notification
             'numero_commande' => $this->commande->numero_commande,
             'ancien_statut' => $this->ancienStatut,
             'nouveau_statut' => $this->nouveauStatut,
-            'message' => "Commande {$this->commande->numero_commande} : {$this->ancienStatut} → {$this->nouveauStatut}",
+            'message' => "Commande {$this->commande->numero_commande} : " . self::libelle($this->ancienStatut) . ' → ' . self::libelle($this->nouveauStatut),
         ];
+    }
+
+    // en_attente -> « En attente », pour un message lisible
+    public static function libelle(string $statut): string
+    {
+        return ['en_attente' => 'En attente', 'validee' => 'Validée', 'en_cours' => 'En cours', 'livree' => 'Livrée'][$statut] ?? $statut;
     }
 }

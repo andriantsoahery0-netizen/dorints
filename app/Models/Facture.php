@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -12,7 +13,28 @@ class Facture extends Model
         'commande_id',
         'montant',
         'user_id',
+        'derniere_relance_at',
     ];
+
+    protected $casts = [
+        'derniere_relance_at' => 'datetime',
+    ];
+
+    // Montant déjà réglé sur la facture (règlements en ariary de sa commande)
+    private const SQL_REGLE = "(select coalesce(sum(t.montant_envoye), 0) from transferts t
+        where t.commande_id = factures.commande_id and t.devise_source = 'MGA')";
+
+    // Factures dont il reste quelque chose à payer
+    public function scopeNonReglees(Builder $query): Builder
+    {
+        return $query->whereRaw('factures.montant > ' . self::SQL_REGLE);
+    }
+
+    // Factures entièrement réglées
+    public function scopeReglees(Builder $query): Builder
+    {
+        return $query->whereRaw('factures.montant <= ' . self::SQL_REGLE);
+    }
 
     public function commande(): BelongsTo
     {
@@ -23,6 +45,32 @@ class Facture extends Model
     public function agent(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    // Message court de rappel, pour WhatsApp
+    public function messageRappel(): string
+    {
+        $commande = $this->commande;
+        $reste = number_format($commande->resteAPayer(), 0, ',', ' ');
+
+        return "Bonjour {$commande->client->prenom}, c'est D'ORINTS. "
+            . "Il reste {$reste} Ar à régler sur votre facture {$this->numero_facture} "
+            . "(commande {$commande->numero_commande}). "
+            . "Vous pouvez payer à l'agence, par MVola, Orange Money, Airtel Money ou virement. Merci !";
+    }
+
+    // Numéro au format international pour WhatsApp : 034 12 345 67 -> 261341234567
+    public function numeroWhatsapp(): ?string
+    {
+        $chiffres = preg_replace('/\D/', '', (string) $this->commande->client->telephone);
+        if ($chiffres === '') {
+            return null;
+        }
+        if (str_starts_with($chiffres, '0')) {
+            $chiffres = '261' . substr($chiffres, 1);
+        }
+
+        return $chiffres;
     }
 
     // Génère un numéro unique du type FAC-2026-0001

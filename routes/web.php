@@ -11,6 +11,9 @@ use App\Http\Controllers\ActivityLogController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FactureController;
+use App\Http\Controllers\RechercheController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SauvegardeController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -23,9 +26,9 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Module Clients
+    Route::get('/clients/export', [ClientController::class, 'export'])->name('clients.export');
     Route::resource('clients', ClientController::class);
 
     // Module Taux de change
@@ -35,11 +38,18 @@ Route::middleware('auth')->group(function () {
         ->name('taux-changes.store');
 
     // Module Commandes
+    Route::get('/commandes/export', [CommandeController::class, 'export'])->name('commandes.export');
     Route::resource('commandes', CommandeController::class);
     Route::post('/commandes/{commande}/valider', [CommandeController::class, 'valider'])->name('commandes.valider');
 
     // Factures
+    Route::get('/factures', [FactureController::class, 'index'])->name('factures.index');
+    Route::get('/factures/export', [FactureController::class, 'export'])->name('factures.export');
+    Route::get('/recherche', [RechercheController::class, 'index'])->name('recherche');
     Route::get('/factures/{facture}', [FactureController::class, 'show'])->name('factures.show');
+    Route::get('/factures/{facture}/pdf', [FactureController::class, 'pdf'])->name('factures.pdf');
+    Route::post('/factures/{facture}/relancer-email', [FactureController::class, 'relancerEmail'])->name('factures.relancer-email');
+    Route::get('/factures/{facture}/relancer-whatsapp', [FactureController::class, 'relancerWhatsapp'])->name('factures.relancer-whatsapp');
 
     // Module Transferts 
     Route::get('/commandes/{commande}/transferts/create', [TransfertController::class, 'create'])->name('transferts.create');
@@ -55,14 +65,18 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/{user}/toggle-actif', [UserController::class, 'toggleActif'])->name('users.toggle-actif');
 
         Route::get('/rapports', [RapportController::class, 'index'])->name('rapports.index');
+        Route::get('/rapports/export', [RapportController::class, 'export'])->name('rapports.export');
+
+        Route::get('/sauvegarde', [SauvegardeController::class, 'index'])->name('sauvegarde.index');
+        Route::get('/sauvegarde/telecharger', [SauvegardeController::class, 'telecharger'])->name('sauvegarde.telecharger');
 
         Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     });
 
-        Route::post('/notifications/mark-all-read', function () {
-        auth()->user()->unreadNotifications->markAsRead();
-        return back();
-    })->name('notifications.markAllRead');
+    // Notifications : liste, ouverture d'une notification, tout marquer comme lu
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/{id}', [NotificationController::class, 'ouvrir'])->name('notifications.ouvrir');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'toutMarquerLu'])->name('notifications.markAllRead');
 });
 
 require __DIR__.'/auth.php';

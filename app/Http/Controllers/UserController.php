@@ -35,7 +35,8 @@ class UserController extends Controller
     ]);
 
     $user = User::create([
-        'name' => $validated['prenom'] . ' ' . $validated['nom'],
+        'nom' => $validated['nom'],
+        'prenom' => $validated['prenom'],
         'email' => $validated['email'],
         'password' => Hash::make($validated['password']),
         'role' => $validated['role'],
@@ -80,10 +81,17 @@ return redirect()->route('users.index')
             ->with('error', 'Vous ne pouvez pas supprimer votre propre compte.');
     }
 
-    // Empêche la suppression si l'utilisateur a des données liées (commandes, transferts)
-    if ($user->commandes()->exists() || $user->transferts()->exists()) {
+    // Empêche la suppression si l'utilisateur a laissé une trace (commandes, règlements,
+    // factures, taux, journal) : on le désactive plutôt, pour garder l'historique
+    $aDesDonnees = $user->commandes()->exists()
+        || $user->transferts()->exists()
+        || \App\Models\Facture::where('user_id', $user->id)->exists()
+        || \App\Models\TauxChange::where('user_id', $user->id)->exists()
+        || \App\Models\ActivityLog::where('user_id', $user->id)->exists();
+
+    if ($aDesDonnees) {
         return redirect()->route('users.index')
-            ->with('error', "Impossible de supprimer {$user->name} : cet utilisateur a des commandes ou transferts enregistrés à son nom. Supprimez d'abord ces données, ou conservez le compte pour préserver l'historique.");
+            ->with('error', "Impossible de supprimer {$user->name} : son nom figure dans l'historique (commandes, règlements, factures ou journal). Désactivez plutôt son compte.");
     }
 
     $nomUser = $user->name;

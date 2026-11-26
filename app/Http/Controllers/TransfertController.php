@@ -7,6 +7,8 @@ use App\Models\TauxChange;
 use App\Models\Transfert;
 use Illuminate\Http\Request;
 use App\Models\ActivityLog;
+use App\Mail\RecuReglement;
+use App\Support\EmailClient;
 
 class TransfertController extends Controller
 {
@@ -67,7 +69,7 @@ class TransfertController extends Controller
 
         $montantConverti = $validated['montant_envoye'] * $tauxApplique;
 
-        Transfert::create([
+        $transfert = Transfert::create([
             'commande_id' => $commande->id,
             'client_id' => $commande->client_id,
             'montant_envoye' => $validated['montant_envoye'],
@@ -84,8 +86,14 @@ class TransfertController extends Controller
             "Transfert de {$validated['montant_envoye']} {$deviseSource} enregistré pour la commande {$commande->numero_commande}"
         );
 
+        // Reçu envoyé au client pour un règlement en ariary
+        $envoye = false;
+        if ($deviseSource === 'MGA') {
+            $envoye = EmailClient::envoyer($commande->client, new RecuReglement($transfert->load('commande.client', 'commande.facture')), 'reçu de règlement');
+        }
+
         return redirect()->route('commandes.show', $commande)
-            ->with('success', 'Règlement enregistré avec succès.');
+            ->with('success', 'Règlement enregistré avec succès.' . EmailClient::mention($envoye));
     }
 
     // Le client règle sa facture : pas de règlement avant la validation de la commande

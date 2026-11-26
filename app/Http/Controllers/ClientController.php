@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Support\Csv;
 use Illuminate\Http\Request;
 
 class ClientController extends Controller
@@ -10,9 +11,32 @@ class ClientController extends Controller
     // Liste des clients, avec leur situation de paiement
     public function index(Request $request)
     {
+        $clients = $this->requete($request)->paginate(10)->withQueryString();
+
+        return view('clients.index', compact('clients'));
+    }
+
+    // Export Excel de la liste, avec les mêmes filtres que l'écran
+    public function export(Request $request)
+    {
+        $situations = ['regle' => 'A tout réglé', 'non_regle' => 'Pas encore réglé', 'aucune_facture' => 'Aucune facture'];
+
+        $lignes = $this->requete($request)->get()->map(fn (Client $c) => [
+            $c->nom, $c->prenom, $c->telephone, $c->adresse, $c->email,
+            Csv::nombre($c->totalFacture()), Csv::nombre($c->totalRegle()), Csv::nombre($c->resteARegler()),
+            $situations[$c->situation()],
+        ]);
+
+        return Csv::telecharger('clients-' . now()->format('Y-m-d') . '.csv',
+            ['Nom', 'Prénom', 'Téléphone', 'Adresse', 'Email', 'Total facturé (Ar)', 'Total réglé (Ar)', 'Reste à régler (Ar)', 'Situation'],
+            $lignes);
+    }
+
+    // Requête commune à la liste et à l'export : filtres « situation » et « recherche »
+    private function requete(Request $request)
+    {
         $query = Client::avecSituation()->latest();
 
-        // Filtre : clients qui ont tout réglé / qui n'ont pas encore réglé
         if ($request->input('situation') === 'regle') {
             $query->ayantRegle();
         } elseif ($request->input('situation') === 'non_regle') {
@@ -23,16 +47,14 @@ class ClientController extends Controller
             $recherche = $request->recherche;
             $query->where(function ($q) use ($recherche) {
                 $q->where('nom', 'like', "%{$recherche}%")
-                ->orWhere('prenom', 'like', "%{$recherche}%")
-                ->orWhere('telephone', 'like', "%{$recherche}%")
-                ->orWhere('email', 'like', "%{$recherche}%");
-        });
+                    ->orWhere('prenom', 'like', "%{$recherche}%")
+                    ->orWhere('telephone', 'like', "%{$recherche}%")
+                    ->orWhere('email', 'like', "%{$recherche}%");
+            });
+        }
+
+        return $query;
     }
-
-    $clients = $query->paginate(10)->withQueryString();
-
-    return view('clients.index', compact('clients'));
-}
 
     // Formulaire de création
     public function create()
@@ -90,6 +112,13 @@ class ClientController extends Controller
     // Suppression
     public function destroy(Client $client)
     {
+        // Un client qui a des commandes est conservé, pour garder l'historique et les factures
+        $nbCommandes = $client->commandes()->count();
+        if ($nbCommandes > 0) {
+            return redirect()->route('clients.index')
+                ->with('error', "Impossible de supprimer {$client->prenom} {$client->nom} : ce client a {$nbCommandes} commande(s) enregistrée(s).");
+        }
+
         $client->delete();
 
         return redirect()->route('clients.index')

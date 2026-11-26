@@ -11,11 +11,46 @@ use App\Models\User;
 use App\Notifications\StatutCommandeChange;
 use App\Models\Facture;
 use Illuminate\Support\Facades\DB;
+use App\Support\Csv;
+use App\Support\EmailClient;
+use App\Mail\CommandeValidee;
+use App\Mail\SuiviCommande;
 
 class CommandeController extends Controller
 {
     // Liste des commandes, avec filtrage par statut
     public function index(Request $request)
+    {
+        $commandes = $this->requete($request)->paginate(10)->withQueryString();
+
+        return view('commandes.index', compact('commandes'));
+    }
+
+    // Export Excel des commandes, avec les mêmes filtres que l'écran
+    public function export(Request $request)
+    {
+        $statuts = ['en_attente' => 'En attente', 'validee' => 'Validée', 'en_cours' => 'En cours', 'livree' => 'Livrée'];
+
+        $lignes = $this->requete($request)->with('lignes', 'facture', 'agent')->get()->map(fn (Commande $c) => [
+            $c->numero_commande,
+            $c->created_at->format('d/m/Y'),
+            $c->client->nom . ' ' . $c->client->prenom,
+            $c->lignes->map(fn ($l) => "{$l->designation} x{$l->quantite}")->implode(' + '),
+            Csv::nombre($c->montant_total),
+            $statuts[$c->statut] ?? $c->statut,
+            $c->facture?->numero_facture,
+            Csv::nombre($c->montantPaye()),
+            Csv::nombre($c->facture ? $c->resteAPayer() : 0),
+            $c->agent?->name,
+        ]);
+
+        return Csv::telecharger('commandes-' . now()->format('Y-m-d') . '.csv',
+            ['N° commande', 'Date', 'Client', 'Produits', 'Montant total (Ar)', 'Statut', 'N° facture', 'Payé (Ar)', 'Reste à payer (Ar)', 'Agent'],
+            $lignes);
+    }
+
+    // Requête commune à la liste et à l'export : filtres « statut » et « recherche »
+    private function requete(Request $request)
     {
         $query = Commande::with('client')->latest();
 
@@ -23,9 +58,17 @@ class CommandeController extends Controller
             $query->where('statut', $request->statut);
         }
 
-        $commandes = $query->paginate(10)->withQueryString();
+        // Recherche par numéro de commande ou par nom du client
+        if ($request->filled('recherche')) {
+            $recherche = $request->recherche;
+            $query->where(function ($q) use ($recherche) {
+                $q->where('numero_commande', 'like', "%{$recherche}%")
+                    ->orWhereHas('client', fn ($c) => $c->where('nom', 'like', "%{$recherche}%")
+                        ->orWhere('prenom', 'like', "%{$recherche}%"));
+            });
+        }
 
-        return view('commandes.index', compact('commandes'));
+        return $query;
     }
 
     // Formulaire de création
@@ -128,16 +171,23 @@ class CommandeController extends Controller
             }
         });
 
+        $envoye = false;
         if ($ancienStatut !== $commande->statut) {
             ActivityLog::enregistrer(
                 'modification_statut_commande',
                 "Commande {$commande->numero_commande} : statut changé de '{$ancienStatut}' à '{$commande->statut}'"
             );
             $this->notifierAdmins($commande, $ancienStatut);
+
+            // Le client est prévenu quand sa commande part en achat, puis quand elle est livrée
+            if (in_array($commande->statut, ['en_cours', 'livree'])) {
+                $objet = $commande->statut === 'livree' ? 'commande livrée' : 'commande en cours';
+                $envoye = EmailClient::envoyer($commande->client, new SuiviCommande($commande->load('lignes', 'facture', 'client')), $objet);
+            }
         }
 
         return redirect()->route('commandes.show', $commande)
-            ->with('success', 'Commande mise à jour avec succès.');
+            ->with('success', 'Commande mise à jour avec succès.' . EmailClient::mention($envoye));
     }
 
     // Validation d'une commande : elle passe à « validee » et une facture est générée
@@ -168,8 +218,11 @@ class CommandeController extends Controller
         );
         $this->notifierAdmins($commande, 'en_attente');
 
+        // Le client reçoit le récapitulatif et sa facture en PDF
+        $envoye = EmailClient::envoyer($commande->client, new CommandeValidee($commande->load('lignes', 'facture', 'client')), 'commande validée');
+
         return redirect()->route('commandes.show', $commande)
-            ->with('success', "Commande validée. Facture {$facture->numero_facture} générée.");
+            ->with('success', "Commande validée. Facture {$facture->numero_facture} générée." . EmailClient::mention($envoye));
     }
 
     // Règles de validation des produits commandés
