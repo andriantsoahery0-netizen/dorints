@@ -17,21 +17,21 @@ class RechercheController extends Controller
         $clients = $commandes = $factures = collect();
 
         if ($q !== '') {
-            $clients = Client::where('nom', 'like', "%{$q}%")
-                ->orWhere('prenom', 'like', "%{$q}%")
+            $clients = Client::where(fn ($n) => $n->nomContient($q))
                 ->orWhere('telephone', 'like', "%{$q}%")
+                ->orWhere(fn ($t) => $t->telephoneContient($q))
                 ->orWhere('email', 'like', "%{$q}%")
                 ->orderBy('nom')->take(10)->get();
 
             $commandes = Commande::with('client')
                 ->where('numero_commande', 'like', "%{$q}%")
-                ->orWhereHas('client', fn ($c) => $c->where('nom', 'like', "%{$q}%")->orWhere('prenom', 'like', "%{$q}%"))
+                ->orWhereHas('client', fn ($c) => $c->nomContient($q))
                 ->orWhereHas('lignes', fn ($l) => $l->where('designation', 'like', "%{$q}%"))
                 ->latest()->take(10)->get();
 
             $factures = Facture::with('commande.client')
                 ->where('numero_facture', 'like', "%{$q}%")
-                ->orWhereHas('commande.client', fn ($c) => $c->where('nom', 'like', "%{$q}%")->orWhere('prenom', 'like', "%{$q}%"))
+                ->orWhereHas('commande.client', fn ($c) => $c->nomContient($q))
                 ->latest()->take(10)->get();
         }
 

@@ -44,12 +44,25 @@
 
                     <div>
                         <label for="password" class="block text-sm font-medium text-slate-700">Mot de passe</label>
-                        <input type="password" name="password" id="password"
-                               class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-600 focus:ring-blue-600">
+                        <div class="mt-1 flex gap-2">
+                            <input type="password" name="password" id="password"
+                                   class="block w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-600 focus:ring-blue-600">
+                            <button type="button" onclick="genererMotDePasse()"
+                                    class="bg-blue-800 hover:bg-blue-900 text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-sm"
+                                    style="white-space:nowrap">
+                                Générer
+                            </button>
+                        </div>
                         @error('password')
                             <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                         @enderror
-                        <p class="text-xs text-slate-500 mt-1">Minimum 8 caractères.</p>
+                        <p class="text-xs text-slate-500 mt-1">Minimum 8 caractères. Tapez-le vous-même ou cliquez sur « Générer » : il remplit aussi la confirmation et sera imprimé sur le ticket.</p>
+                    </div>
+
+                    <div>
+                        <label for="password_confirmation" class="block text-sm font-medium text-slate-700">Confirmation du mot de passe</label>
+                        <input type="password" name="password_confirmation" id="password_confirmation"
+                               class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-600 focus:ring-blue-600">
                     </div>
 
                     <div>
@@ -79,4 +92,18 @@
             </div>
         </div>
     </div>
+    <script>
+        // Mot de passe de 10 caractères, sans caractères ambigus (0/O, 1/l/I)
+        function genererMotDePasse() {
+            const caracteres = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+            const aleatoire = new Uint32Array(10);
+            crypto.getRandomValues(aleatoire);
+            const motDePasse = Array.from(aleatoire, (n) => caracteres[n % caracteres.length]).join('');
+            document.getElementById('password').value = motDePasse;
+            document.getElementById('password_confirmation').value = motDePasse;
+            // Les deux champs passent en clair (icône œil barrée)
+            ['password', 'password_confirmation'].forEach((id) => window.oeilAfficher(document.getElementById(id), true));
+        }
+
+    </script>
 </x-app-layout>

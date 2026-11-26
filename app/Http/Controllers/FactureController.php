@@ -53,6 +53,16 @@ class FactureController extends Controller
             $query->reglees();
         }
 
+        // Recherche par numéro de facture, numéro de commande, nom ou prénom du client
+        if ($request->filled('recherche')) {
+            $recherche = trim($request->recherche);
+            $query->where(function ($q) use ($recherche) {
+                $q->where('numero_facture', 'like', "%{$recherche}%")
+                    ->orWhereHas('commande', fn ($c) => $c->where('numero_commande', 'like', "%{$recherche}%"))
+                    ->orWhereHas('commande.client', fn ($c) => $c->nomContient($recherche));
+            });
+        }
+
         return $query;
     }
 
@@ -87,18 +97,23 @@ class FactureController extends Controller
             return back()->with('error', "La facture {$facture->numero_facture} est déjà réglée.");
         }
         if (! $client->email) {
-            return back()->with('error', "{$client->prenom} {$client->nom} n'a pas d'adresse e-mail. Relancez-le par WhatsApp.");
+            return back()->with('error',
+                "{$client->prenom} {$client->nom} n'a pas d'adresse e-mail. "
+                . 'Relancez-le par WhatsApp.');
         }
 
         try {
             Mail::to($client->email)->send(new RappelReglement($facture));
         } catch (\Throwable $e) {
-            return back()->with('error', "L'e-mail n'a pas pu être envoyé. Vérifiez la configuration MAIL du fichier .env.");
+            return back()->with('error',
+                "L'e-mail n'a pas pu être envoyé. "
+                . 'Vérifiez la configuration MAIL du fichier .env.');
         }
 
         $this->noterRelance($facture, "par e-mail à {$client->email}");
 
-        return back()->with('success', "Rappel envoyé par e-mail à {$client->prenom} {$client->nom}.");
+        return back()->with('success',
+            "Rappel envoyé par e-mail à {$client->prenom} {$client->nom}.");
     }
 
     // Relance par WhatsApp : ouvre WhatsApp avec le message déjà écrit

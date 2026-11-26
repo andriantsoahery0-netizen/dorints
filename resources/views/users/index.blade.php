@@ -36,8 +36,8 @@
                 <div class="p-6">
 
                     <div class="overflow-x-auto">
-                        <table class="w-full min-w-[880px] table-fixed divide-y divide-slate-100">
-                            <colgroup><col><col><col><col class="w-[6.5rem]"><col class="w-[7.5rem]"><col class="w-[12rem]"></colgroup>
+                        <table style="min-width:940px" class="w-full table-fixed divide-y divide-slate-100">
+                            <colgroup><col><col><col><col class="w-[6.5rem]"><col class="w-[7.5rem]"><col style="width:16rem"></colgroup>
                             <thead>
                                 <tr>
                                     <th class="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Nom</th>
@@ -76,6 +76,11 @@
                                         </td>
                                         <td class="px-3 py-3 space-x-3 text-right whitespace-nowrap">
                                             @if ($user->id !== auth()->id())
+                                                <form action="{{ route('users.nouveau-ticket', $user) }}" method="POST" class="inline"
+                                                      onsubmit="return confirm('Générer un nouveau mot de passe provisoire et réimprimer le ticket ? L\'ancien mot de passe ne fonctionnera plus.');">
+                                                    @csrf
+                                                    <button type="submit" class="text-blue-700 hover:underline text-sm font-medium">Ticket</button>
+                                                </form>
                                                 <form action="{{ route('users.toggle-actif', $user) }}" method="POST" class="inline">
                                                     @csrf
                                                     <button type="submit" @class([

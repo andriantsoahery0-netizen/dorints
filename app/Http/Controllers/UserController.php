@@ -30,7 +30,7 @@ class UserController extends Controller
         'nom' => 'required|string|max:255',
         'prenom' => 'required|string|max:255',
         'email' => 'required|email|unique:users,email',
-        'password' => 'required|string|min:8',
+        'password' => 'required|string|min:8|confirmed',
         'role' => 'required|in:admin,agent',
     ]);
 
@@ -47,8 +47,71 @@ class UserController extends Controller
         "Utilisateur {$user->name} ({$user->role}) créé"
     );
 
-return redirect()->route('users.index')
-    ->with('success', 'Utilisateur créé avec succès.');
+    // Le ticket d'identifiants n'est affiché qu'une seule fois, juste après la création :
+    // le mot de passe en clair n'est jamais enregistré en base
+    session()->flash('ticket', [
+        'nom_complet' => $user->name,
+        'role' => $user->role === 'admin' ? 'Administrateur' : 'Agent',
+        'email' => $user->email,
+        'mot_de_passe' => $validated['password'],
+        'cree_le' => now()->format('d/m/Y à H:i'),
+    ]);
+
+    return redirect()->route('users.ticket', $user);
+}
+
+    // Réimpression du ticket : l'ancien mot de passe n'est pas lisible (il est haché),
+    // on en génère donc un nouveau, provisoire, et on réaffiche le ticket
+    public function nouveauTicket(User $user)
+{
+    if ($user->id === auth()->id()) {
+        return redirect()->route('users.index')
+            ->with('error', 'Pour votre propre compte, changez le mot de passe dans le menu Profil.');
+    }
+
+    $motDePasse = self::motDePasseProvisoire();
+    $user->forceFill(['password' => Hash::make($motDePasse)])->save();
+
+    ActivityLog::enregistrer(
+        'nouveau_ticket_utilisateur',
+        "Nouveau mot de passe provisoire et ticket pour {$user->name}"
+    );
+
+    session()->flash('ticket', [
+        'nom_complet' => $user->name,
+        'role' => $user->role === 'admin' ? 'Administrateur' : 'Agent',
+        'email' => $user->email,
+        'mot_de_passe' => $motDePasse,
+        'cree_le' => now()->format('d/m/Y à H:i'),
+        'reimpression' => true,
+    ]);
+
+    return redirect()->route('users.ticket', $user);
+}
+
+    // Mot de passe provisoire de 10 caractères, sans caractères ambigus (0/O, 1/l/I)
+    private static function motDePasseProvisoire(): string
+{
+    $caracteres = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    $motDePasse = '';
+    for ($i = 0; $i < 10; $i++) {
+        $motDePasse .= $caracteres[random_int(0, strlen($caracteres) - 1)];
+    }
+
+    return $motDePasse;
+}
+
+    // Ticket d'identifiants à imprimer pour le nouvel utilisateur
+    public function ticket(User $user)
+{
+    $ticket = session('ticket');
+
+    if (! $ticket || $ticket['email'] !== $user->email) {
+        return redirect()->route('users.index')
+            ->with('error', "Le ticket n'est disponible qu'une seule fois, juste après la création du compte.");
+    }
+
+    return view('users.ticket', compact('user', 'ticket'));
 }
 
     //Activation et désactivation compte

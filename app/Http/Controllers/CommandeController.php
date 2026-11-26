@@ -63,8 +63,7 @@ class CommandeController extends Controller
             $recherche = $request->recherche;
             $query->where(function ($q) use ($recherche) {
                 $q->where('numero_commande', 'like', "%{$recherche}%")
-                    ->orWhereHas('client', fn ($c) => $c->where('nom', 'like', "%{$recherche}%")
-                        ->orWhere('prenom', 'like', "%{$recherche}%"));
+                    ->orWhereHas('client', fn ($c) => $c->nomContient($recherche));
             });
         }
 
@@ -198,7 +197,8 @@ class CommandeController extends Controller
         }
 
         if (! $commande->lignes()->exists() || $commande->montant_total <= 0) {
-            return back()->with('error', 'Ajoutez les produits commandés et leur prix avant de valider la commande.');
+            return back()->with('error',
+                'Ajoutez les produits commandés et leur prix avant de valider la commande.');
         }
 
         $facture = DB::transaction(function () use ($commande) {
@@ -214,15 +214,18 @@ class CommandeController extends Controller
 
         ActivityLog::enregistrer(
             'validation_commande',
-            "Commande {$commande->numero_commande} validée, facture {$facture->numero_facture} émise"
+            "Commande {$commande->numero_commande} validée, "
+                . "facture {$facture->numero_facture} émise"
         );
         $this->notifierAdmins($commande, 'en_attente');
 
         // Le client reçoit le récapitulatif et sa facture en PDF
-        $envoye = EmailClient::envoyer($commande->client, new CommandeValidee($commande->load('lignes', 'facture', 'client')), 'commande validée');
+        $email = new CommandeValidee($commande->load('lignes', 'facture', 'client'));
+        $envoye = EmailClient::envoyer($commande->client, $email, 'commande validée');
 
         return redirect()->route('commandes.show', $commande)
-            ->with('success', "Commande validée. Facture {$facture->numero_facture} générée." . EmailClient::mention($envoye));
+            ->with('success', "Commande validée. Facture {$facture->numero_facture} générée."
+                . EmailClient::mention($envoye));
     }
 
     // Règles de validation des produits commandés

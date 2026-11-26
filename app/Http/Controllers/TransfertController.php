@@ -45,8 +45,11 @@ class TransfertController extends Controller
         // Un règlement en ariary ne peut pas dépasser le reste à payer de la facture
         $reste = $commande->resteAPayer();
         if ($validated['sens'] === 'mga_vers_eur' && $validated['montant_envoye'] > $reste) {
+            $resteAffiche = number_format($reste, 0, ',', ' ');
+
             return back()->withInput()->withErrors([
-                'montant_envoye' => 'Le montant dépasse le reste à payer de la facture (' . number_format($reste, 0, ',', ' ') . ' Ar).',
+                'montant_envoye' => 'Le montant dépasse le reste à payer de la facture '
+                    . "({$resteAffiche} Ar).",
             ]);
         }
 

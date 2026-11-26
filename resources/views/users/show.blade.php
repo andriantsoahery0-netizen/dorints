@@ -5,10 +5,22 @@
                 <h2 class="font-display text-2xl font-bold text-slate-900 leading-tight">
                     Fiche utilisateur — {{ $user->name }}
                 </h2>
-                <a href="{{ route('users.index') }}"
-                   class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 px-4 rounded-lg text-sm transition">
-                    Retour
-                </a>
+                <div class="flex items-center gap-2">
+                    @if ($user->id !== auth()->id())
+                        <form action="{{ route('users.nouveau-ticket', $user) }}" method="POST"
+                              onsubmit="return confirm('Générer un nouveau mot de passe provisoire et réimprimer le ticket ? L\'ancien mot de passe ne fonctionnera plus.');">
+                            @csrf
+                            <button type="submit"
+                                    class="bg-blue-800 hover:bg-blue-900 text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-sm">
+                                Réimprimer le ticket
+                            </button>
+                        </form>
+                    @endif
+                    <a href="{{ route('users.index') }}"
+                       class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 px-4 rounded-lg text-sm transition">
+                        Retour
+                    </a>
+                </div>
             </div>
     
         </div>

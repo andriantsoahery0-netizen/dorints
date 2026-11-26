@@ -47,9 +47,10 @@
                     <div>
                         <label for="montant_envoye" class="block text-sm font-medium text-slate-700">Montant envoyé</label>
                         <input type="text" inputmode="decimal" name="montant_envoye" id="montant_envoye"
-                               value="{{ old('montant_envoye', (int) $commande->resteAPayer()) }}"
-                               placeholder="ex: 850000"
+                               value="{{ old('montant_envoye') }}"
+                               placeholder="Saisissez le montant reçu du client"
                                class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-600 focus:ring-blue-600">
+                        <p class="text-xs text-slate-500 mt-1">Reste à payer : {{ number_format($commande->resteAPayer(), 0, ',', ' ') }} Ar. Le montant n'est pas prérempli : saisissez celui réellement reçu.</p>
                         @error('montant_envoye')
                             <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                         @enderror

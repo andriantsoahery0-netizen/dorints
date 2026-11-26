@@ -26,7 +26,8 @@ class EmailClient
             return false;
         }
 
-        ActivityLog::enregistrer('email_client', "E-mail « {$objet} » envoyé à {$client->email}");
+        ActivityLog::enregistrer('email_client',
+            "E-mail « {$objet} » envoyé à {$client->email}");
 
         return true;
     }

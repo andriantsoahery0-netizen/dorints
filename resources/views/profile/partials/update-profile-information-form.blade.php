@@ -56,15 +56,7 @@
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Enregistrer') }}</x-primary-button>
 
-            @if (session('status') === 'profile-updated')
-                <p
-                    x-data="{ show: true }"
-                    x-show="show"
-                    x-transition
-                    x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-slate-600 dark:text-slate-400"
-                >{{ __('Enregistré.') }}</p>
-            @endif
+
         </div>
     </form>
 </section>

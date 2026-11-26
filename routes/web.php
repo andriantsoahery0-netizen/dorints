@@ -59,6 +59,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
         Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+        Route::get('/users/{user}/ticket', [UserController::class, 'ticket'])->name('users.ticket');
+        Route::post('/users/{user}/nouveau-ticket', [UserController::class, 'nouveauTicket'])->name('users.nouveau-ticket');
         Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
         Route::post('/users', [UserController::class, 'store'])->name('users.store');
         Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');

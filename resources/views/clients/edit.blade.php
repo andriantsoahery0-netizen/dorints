@@ -36,9 +36,9 @@
 
                     <div>
                         <label for="telephone" class="block text-sm font-medium text-slate-700">Téléphone</label>
-                        <input type="text" name="telephone" id="telephone" placeholder="034 12 345 67" value="{{ old('telephone', $client->telephone) }}"
+                        <input type="text" name="telephone" id="telephone" placeholder="03X XX XXX XX" value="{{ old('telephone', $client->telephone) }}"
                                class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-600 focus:ring-blue-600">
-                        <p class="text-xs text-slate-500 mt-1">Enregistré au format 034 12 345 67, quelle que soit la saisie.</p>
+                        <p class="text-xs text-slate-500 mt-1">Enregistré au format 03X XX XXX XX, quelle que soit la saisie.</p>
                         @error('telephone')
                             <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                         @enderror

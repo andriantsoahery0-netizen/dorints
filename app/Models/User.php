@@ -56,7 +56,9 @@ class User extends Authenticatable
     // Le nom est toujours enregistré (et donc affiché) en majuscules
     protected function nom(): Attribute
     {
-        return Attribute::make(set: fn ($valeur) => $valeur === null ? null : mb_strtoupper(trim($valeur), 'UTF-8'));
+        return Attribute::make(
+            set: fn ($valeur) => $valeur === null ? null : mb_strtoupper(trim($valeur), 'UTF-8')
+        );
     }
 
     public function isAdmin(): bool
@@ -77,5 +79,11 @@ class User extends Authenticatable
     public function transferts(): HasMany
     {
         return $this->hasMany(Transfert::class);
+    }
+
+    // Le prénom commence toujours par une majuscule (« tiana » -> « Tiana »)
+    protected function prenom(): Attribute
+    {
+        return Attribute::make(set: fn ($valeur) => \App\Support\Prenom::formater($valeur));
     }
 }

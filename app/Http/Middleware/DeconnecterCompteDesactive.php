@@ -19,7 +19,9 @@ class DeconnecterCompteDesactive
             $request->session()->regenerateToken();
 
             return redirect()->route('login')
-                ->withErrors(['email' => 'Ce compte a été désactivé. Contactez un administrateur.']);
+                ->withErrors([
+                    'email' => 'Ce compte a été désactivé. Contactez un administrateur.',
+                ]);
         }
 
         return $next($request);

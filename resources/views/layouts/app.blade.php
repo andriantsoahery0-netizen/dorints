@@ -124,5 +124,6 @@
                 </main>
             </div>
         </div>
+        @include('partials.oeil-mot-de-passe')
     </body>
 </html>

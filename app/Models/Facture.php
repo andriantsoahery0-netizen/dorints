@@ -66,8 +66,13 @@ class Facture extends Model
         if ($chiffres === '') {
             return null;
         }
-        if (str_starts_with($chiffres, '0')) {
+        // Accepte 034 12 345 67, +261 34 12 345 67, 00261 34… ou 34 12 345 67
+        if (str_starts_with($chiffres, '00')) {
+            $chiffres = substr($chiffres, 2);
+        } elseif (str_starts_with($chiffres, '0')) {
             $chiffres = '261' . substr($chiffres, 1);
+        } elseif (strlen($chiffres) === 9) {
+            $chiffres = '261' . $chiffres;
         }
 
         return $chiffres;

@@ -46,9 +46,9 @@ class ClientController extends Controller
         if ($request->filled('recherche')) {
             $recherche = $request->recherche;
             $query->where(function ($q) use ($recherche) {
-                $q->where('nom', 'like', "%{$recherche}%")
-                    ->orWhere('prenom', 'like', "%{$recherche}%")
+                $q->where(fn ($n) => $n->nomContient($recherche))
                     ->orWhere('telephone', 'like', "%{$recherche}%")
+                    ->orWhere(fn ($t) => $t->telephoneContient($recherche))
                     ->orWhere('email', 'like', "%{$recherche}%");
             });
         }
@@ -68,7 +68,11 @@ class ClientController extends Controller
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'prenom' => 'required|string|max:255',
-            'telephone' => 'required|string|max:20',
+            'telephone' => ['required', 'string', 'max:20', function ($attribut, $valeur, $echec) {
+                if (! Client::telephoneValide($valeur)) {
+                    $echec("Le numéro de téléphone n'est pas valide. Format attendu : 03X XX XXX XX ou +261 3X XX XXX XX.");
+                }
+            }],
             'adresse' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
         ]);
@@ -98,7 +102,11 @@ class ClientController extends Controller
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'prenom' => 'required|string|max:255',
-            'telephone' => 'required|string|max:20',
+            'telephone' => ['required', 'string', 'max:20', function ($attribut, $valeur, $echec) {
+                if (! Client::telephoneValide($valeur)) {
+                    $echec("Le numéro de téléphone n'est pas valide. Format attendu : 03X XX XXX XX ou +261 3X XX XXX XX.");
+                }
+            }],
             'adresse' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
         ]);
